@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>STACK.EXE</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN SYSTEM
+   Musk telemetry precision × Gen Z neon euphoria
+   ============================================================ */
+:root {
+  --bg:       #03010d;
+  --surface:  rgba(255,255,255,0.035);
+  --border:   rgba(255,255,255,0.09);
+  --cyan:     #40eeff;
+  --purple:   #e040ff;
+  --pink:     #ff4da6;
+  --lime:     #d4ff40;
+  --orange:   #ff8c40;
+  --green:    #40ff99;
+  --red:      #ff4d6d;
+  --text:     #f4f4ff;
+  --sub:      #c8c8e0;
+  --dim:      #9090b8;
+  /* glows — tighter blur so text stays crisp */
+  --gc: 0 0 6px rgba(64,238,255,0.7),   0 0 20px rgba(64,238,255,0.25);
+  --gp: 0 0 6px rgba(224,64,255,0.7),   0 0 20px rgba(224,64,255,0.25);
+  --gk: 0 0 6px rgba(255,77,166,0.7),   0 0 20px rgba(255,77,166,0.25);
+  --gl: 0 0 6px rgba(212,255,64,0.7),   0 0 20px rgba(212,255,64,0.25);
+  --go: 0 0 6px rgba(255,140,64,0.7),   0 0 20px rgba(255,140,64,0.25);
+  --gg: 0 0 6px rgba(64,255,153,0.7),   0 0 20px rgba(64,255,153,0.25);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   BACKGROUND SYSTEM — aurora + grid + particles + scanlines
+   ============================================================ */
+#star-canvas {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
+}
+
+.aurora {
+  position: fixed; inset: 0;
+  z-index: 0; pointer-events: none; overflow: hidden;
+}
+
+.orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(90px); mix-blend-mode: screen;
+}
+
+.orb1 { width:600px;height:600px; background:radial-gradient(circle,rgba(208,0,255,0.4),transparent 65%); top:-200px;left:-150px; animation:o1 20s ease-in-out infinite; }
+.orb2 { width:500px;height:500px; background:radial-gradient(circle,rgba(0,229,255,0.35),transparent 65%); top:15%;right:-120px; animation:o2 26s ease-in-out infinite; }
+.orb3 { width:420px;height:420px; background:radial-gradient(circle,rgba(255,0,128,0.28),transparent 65%); bottom:5%;left:5%; animation:o3 18s ease-in-out infinite; }
+.orb4 { width:360px;height:360px; background:radial-gradient(circle,rgba(198,255,0,0.22),transparent 65%); top:45%;right:15%; animation:o4 30s ease-in-out infinite; }
+.orb5 { width:280px;height:280px; background:radial-gradient(circle,rgba(255,109,0,0.28),transparent 65%); top:28%;left:25%; animation:o5 22s ease-in-out infinite; }
+.orb6 { width:200px;height:200px; background:radial-gradient(circle,rgba(0,230,118,0.2),transparent 65%); bottom:20%;right:10%; animation:o6 15s ease-in-out infinite; }
+
+@keyframes o1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(100px,80px) scale(1.15)} 66%{transform:translate(40px,160px) scale(0.9)} }
+@keyframes o2 { 0%,100%{transform:translate(0,0) scale(1)} 40%{transform:translate(-110px,100px) scale(1.2)} 70%{transform:translate(-50px,-70px) scale(0.85)} }
+@keyframes o3 { 0%,100%{transform:translate(0,0) scale(1)} 35%{transform:translate(90px,-80px) scale(1.1)} 75%{transform:translate(130px,-30px) scale(0.95)} }
+@keyframes o4 { 0%,100%{transform:translate(0,0) scale(1)} 30%{transform:translate(-90px,70px) scale(1.3)} 65%{transform:translate(70px,110px) scale(0.8)} }
+@keyframes o5 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(120px,-140px) scale(1.2)} }
+@keyframes o6 { 0%,100%{transform:translate(0,0) scale(1)} 45%{transform:translate(-60px,-80px) scale(1.25)} }
+
+/* Perspective grid */
+.grid-bg {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 20%, transparent 75%);
+}
+
+/* Scanlines */
+.scanlines {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+}
+
+/* Vignette */
+.vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(3,1,13,0.92) 100%);
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.app {
+  position: relative; z-index: 2;
+  padding: 0 16px 32px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   HERO SECTION — the "wow" moment
+   ============================================================ */
+.hero {
+  text-align: center;
+  padding: 36px 0 28px;
+  position: relative;
+}
+
+/* Mission patch / emblem */
+.emblem {
+  width: 64px; height: 64px;
+  margin: 0 auto 18px;
+  position: relative;
+}
+.emblem-ring {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,229,255,0.4);
+  position: absolute; inset: 0;
+  animation: ringPulse 3s ease-in-out infinite;
+}
+.emblem-ring2 {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(208,0,255,0.3);
+  position: absolute; top: 6px; left: 6px;
+  animation: ringPulse 3s ease-in-out infinite 0.5s;
+}
+.emblem-core {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,255,0.25), rgba(208,0,255,0.15), transparent);
+  border: 1px solid rgba(0,229,255,0.6);
+  position: absolute; top: 14px; left: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 0 20px rgba(0,229,255,0.4);
+}
+@keyframes ringPulse { 0%,100%{opacity:0.4;transform:scale(1)} 50%{opacity:0.9;transform:scale(1.04)} }
+
+.hero-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 40px;
+  font-weight: 900;
+  color: var(--cyan);
+  text-shadow: var(--gc);
+  letter-spacing: 8px;
+  position: relative;
+  display: inline-block;
+  animation: gTitle 5s infinite;
+}
+.hero-title::before {
+  content: 'STACK.EXE';
+  position: absolute; top:0; left:0;
+  color: var(--pink);
+  clip-path: polygon(0 20%, 100% 20%, 100% 42%, 0 42%);
+  animation: gLayerA 5s infinite;
+}
+.hero-title::after {
+  content: 'STACK.EXE';
+  position: absolute; top:0; left:0;
+  color: var(--purple);
+  clip-path: polygon(0 58%, 100% 58%, 100% 78%, 0 78%);
+  animation: gLayerB 5s infinite;
+}
+@keyframes gTitle  { 0%,87%,100%{transform:translate(0)} 88%{transform:translate(-3px,1px)} 90%{transform:translate(3px,-1px)} 92%{transform:translate(-2px,2px)} 94%{transform:translate(0)} }
+@keyframes gLayerA { 0%,87%,100%{opacity:0;transform:translate(0)} 88%{opacity:1;transform:translate(5px,0)} 90%{opacity:1;transform:translate(-5px,0)} 92%{opacity:0} }
+@keyframes gLayerB { 0%,87%,100%{opacity:0;transform:translate(0)} 89%{opacity:1;transform:translate(-4px,0)} 91%{opacity:1;transform:translate(4px,0)} 93%{opacity:0} }
+
+.hero-tagline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  color: #d4ff40;
+  letter-spacing: 3.5px;
+  margin-top: 10px;
+  text-shadow: var(--gl);
+  animation: flicker 8s infinite;
+  text-transform: uppercase;
+}
+@keyframes flicker { 0%,93%,100%{opacity:1} 94%{opacity:0.15} 95%{opacity:1} 96%{opacity:0.4} 97%{opacity:1} }
+
+/* Mission status ticker */
+.ticker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.tick-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: #d0d0e8;
+  letter-spacing: 1px;
+  display: flex; align-items: center; gap: 5px;
+}
+.tick-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  animation: dotPulse 2s ease-in-out infinite;
+}
+.tick-dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.tick-dot.cyan  { background: var(--cyan);  box-shadow: 0 0 6px var(--cyan); animation-delay: 0.3s; }
+.tick-dot.pink  { background: var(--pink);  box-shadow: 0 0 6px var(--pink); animation-delay: 0.6s; }
+@keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.tick-sep { color: #6060aa; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+/* ============================================================
+   BTC TELEMETRY BAR
+   ============================================================ */
+.btc-bar {
+  background: rgba(0,229,255,0.04);
+  border: 1px solid rgba(0,229,255,0.22);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.btc-bar::before {
+  content:''; position:absolute; top:0; left:-60%;
+  width:40%; height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  animation: sweep 2.5s linear infinite;
+}
+@keyframes sweep { 0%{left:-40%} 100%{left:140%} }
+
+.btc-left { display:flex; flex-direction:column; gap:3px; }
+.btc-main-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  color: #c0c0d8; letter-spacing: 1.5px; text-transform: uppercase;
+}
+.btc-ath {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: #9898b8; letter-spacing: 1px;
+}
+
+.btc-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--orange);
+  color: var(--orange);
+  font-family: 'Orbitron', monospace;
+  font-size: 20px; font-weight: 700;
+  width: 148px; text-align: right;
+  outline: none; padding: 2px 6px;
+  text-shadow: var(--go);
+}
+.btc-input::placeholder { color:rgba(255,109,0,0.25); font-size:13px; }
+
+/* ============================================================
+   STAT CARDS
+   ============================================================ */
+.stats-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+
+.stat-card {
+  background: var(--surface);
+  border-radius: 8px; padding: 16px 18px;
+  position: relative; overflow: hidden;
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+}
+.stat-card::before { content:''; position:absolute; top:0;left:0;right:0;height:2px; }
+.sc1::before { background:linear-gradient(90deg,var(--cyan),var(--purple)); box-shadow:0 0 10px var(--cyan); }
+.sc2::before { background:linear-gradient(90deg,var(--lime),var(--cyan));   box-shadow:0 0 10px var(--lime); }
+.sc3::before { background:linear-gradient(90deg,var(--pink),var(--orange)); box-shadow:0 0 10px var(--pink); }
+.sc4::before { background:linear-gradient(90deg,var(--purple),var(--pink)); box-shadow:0 0 10px var(--purple); }
+
+.sc-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.sc1 .sc-label{color:#40eeff} .sc2 .sc-label{color:#d4ff40}
+.sc3 .sc-label{color:#ff4da6} .sc4 .sc-label{color:#e040ff}
+
+.sc-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px; font-weight: 700; line-height: 1;
+}
+.sc1 .sc-val{color:var(--cyan);text-shadow:var(--gc)}
+.sc2 .sc-val{color:var(--lime);text-shadow:var(--gl)}
+.sc3 .sc-val{color:var(--pink);text-shadow:var(--gk)}
+.sc4 .sc-val{color:var(--purple);text-shadow:var(--gp)}
+
+.sc-sub { font-size: 11px; color: #b0b0cc; margin-top: 5px; font-family:'Inter',sans-serif; font-weight:400; }
+
+/* ============================================================
+   BUFFER BAR
+   ============================================================ */
+.buffer-block {
+  background: var(--surface); border:1px solid rgba(198,255,0,0.18);
+  border-radius: 8px; padding: 18px; margin-bottom: 16px;
+  backdrop-filter: blur(6px);
+}
+.buf-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.buf-label { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; color:#d4ff40; letter-spacing:2px; text-transform:uppercase; text-shadow:var(--gl); }
+.buf-pct { font-family:'Orbitron',monospace; font-size:18px; font-weight:700; color:var(--lime); text-shadow:var(--gl); }
+
+.prog-track { height:10px; background:rgba(198,255,0,0.07); border-radius:99px; border:1px solid rgba(198,255,0,0.18); overflow:hidden; }
+.prog-fill {
+  height:100%; border-radius:99px;
+  background:linear-gradient(90deg,var(--lime),var(--cyan));
+  box-shadow:0 0 18px rgba(198,255,0,0.7), 0 0 5px white;
+  transition:width 0.95s cubic-bezier(0.22,1,0.36,1);
+  position:relative;
+}
+.prog-fill::after {
+  content:''; position:absolute; right:0;top:0;bottom:0;
+  width:5px; background:white; border-radius:99px;
+  box-shadow:0 0 8px white,0 0 18px var(--lime);
+  animation:tip 1.6s ease infinite;
+}
+@keyframes tip{0%,100%{opacity:1}50%{opacity:0.2}}
+
+.prog-row { display:flex; justify-content:space-between; margin-top:8px; font-family:'JetBrains Mono',monospace; font-size:10px; color:#b0b0cc; font-weight:400; }
+
+/* ============================================================
+   SECTION HEADERS
+   ============================================================ */
+.sec-head {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 4px; text-transform: uppercase;
+  margin: 20px 0 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sec-head::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,currentColor,transparent); opacity:0.25; }
+
+/* ============================================================
+   COIN CARDS
+   ============================================================ */
+.coins-wrap { display:flex; flex-direction:column; gap:10px; margin-bottom:4px; }
+
+.coin-card {
+  border-radius: 8px; padding: 18px;
+  position:relative; overflow:hidden;
+  backdrop-filter:blur(6px);
+  transition:transform 0.15s;
+}
+.coin-card:active{transform:scale(0.985)}
+
+.cc-eth  { background:rgba(98,126,234,0.07); border:1px solid rgba(98,126,234,0.28); }
+.cc-sol  { background:rgba(153,69,255,0.07); border:1px solid rgba(153,69,255,0.28); }
+.cc-link { background:rgba(42,140,255,0.07); border:1px solid rgba(42,140,255,0.28); }
+.cc-avax { background:rgba(255,65,66,0.07);  border:1px solid rgba(255,65,66,0.28); }
+
+/* shimmer sweep */
+.coin-card::before {
+  content:''; position:absolute; top:0;left:-60%; width:40%; height:1px;
+  animation:sweep 5s linear infinite;
+}
+.cc-eth::before  { background:linear-gradient(90deg,transparent,#627eea,transparent); }
+.cc-sol::before  { background:linear-gradient(90deg,transparent,#9945ff,transparent); }
+.cc-link::before { background:linear-gradient(90deg,transparent,#2a8cff,transparent); }
+.cc-avax::before { background:linear-gradient(90deg,transparent,#ff4142,transparent); }
+
+.cc-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+
+.cc-name { font-family:'Orbitron',monospace; font-size:22px; font-weight:900; }
+.cc-eth  .cc-name { color:#8ca8ff; text-shadow:0 0 8px rgba(140,168,255,0.8); }
+.cc-sol  .cc-name { color:#bb77ff; text-shadow:0 0 8px rgba(187,119,255,0.8); }
+.cc-link .cc-name { color:#55aaff; text-shadow:0 0 8px rgba(85,170,255,0.8); }
+.cc-avax .cc-name { color:#ff6666; text-shadow:0 0 8px rgba(255,102,102,0.8); }
+
+.cc-badge { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; padding:4px 10px; border-radius:4px; border:1px solid; }
+.cc-eth  .cc-badge { color:#8ca8ff; border-color:#8ca8ff; background:rgba(140,168,255,0.12); }
+.cc-sol  .cc-badge { color:#bb77ff; border-color:#bb77ff; background:rgba(187,119,255,0.12); }
+.cc-link .cc-badge { color:#55aaff; border-color:#55aaff; background:rgba(85,170,255,0.12); }
+.cc-avax .cc-badge { color:#ff6666; border-color:#ff6666; background:rgba(255,102,102,0.12); }
+
+.cc-inputs { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px; }
+
+.ci label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; font-weight:500; letter-spacing:1px;
+  color:#b0b0cc; text-transform:uppercase;
+  display:block; margin-bottom:5px;
+}
+.ci input {
+  width:100%;
+  background:rgba(0,0,0,0.45);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:5px;
+  color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px; font-weight:400;
+  padding:8px 10px;
+  outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.cc-eth  .ci input:focus { border-color:#8ca8ff; box-shadow:0 0 10px rgba(140,168,255,0.4); }
+.cc-sol  .ci input:focus { border-color:#bb77ff; box-shadow:0 0 10px rgba(187,119,255,0.4); }
+.cc-link .ci input:focus { border-color:#55aaff; box-shadow:0 0 10px rgba(85,170,255,0.4); }
+.cc-avax .ci input:focus { border-color:#ff6666; box-shadow:0 0 10px rgba(255,102,102,0.4); }
+
+.pnl-bar {
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px; font-weight:500;
+  padding:8px 12px; border-radius:5px;
+  text-align:center; letter-spacing:0.5px;
+}
+.pnl-bar.up   { background:rgba(0,230,118,0.09); color:var(--green); border:1px solid rgba(0,230,118,0.28); text-shadow:var(--gg); }
+.pnl-bar.down { background:rgba(255,23,68,0.09);  color:var(--red);   border:1px solid rgba(255,23,68,0.28); }
+.pnl-bar.flat { background:rgba(255,255,255,0.03); color:#aaaacc;  border:1px solid var(--border); }
+
+/* ============================================================
+   EXIT PROTOCOL
+   ============================================================ */
+.exits-block {
+  background:var(--surface); border:1px solid rgba(255,0,128,0.18);
+  border-radius:8px; padding:18px; margin-bottom:4px;
+  backdrop-filter:blur(6px);
+}
+
+.exit-row {
+  display:grid; grid-template-columns:90px 1fr 86px;
+  gap:14px; align-items:center;
+  padding:12px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.exit-row:first-child{padding-top:0}
+.exit-row:last-child{border-bottom:none;padding-bottom:0}
+
+.exit-lvl { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:#ff8c40; text-shadow:var(--go); }
+
+.exit-desc { font-family:'Inter',sans-serif; font-size:13px; font-weight:400; color:rgba(255,255,255,0.92); line-height:1.45; }
+.exit-desc b { font-weight:700; color:#40eeff; font-family:'JetBrains Mono',monospace; }
+
+.exit-chip {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; font-weight:700; letter-spacing:1px;
+  padding:5px 9px; border-radius:4px;
+  text-align:center; border:1px solid;
+  transition:all 0.3s; text-transform:uppercase;
+}
+.exit-chip.wait { color:#aaaacc; border-color:rgba(255,255,255,0.25); }
+.exit-chip.hit  { color:var(--green); border-color:var(--green); background:rgba(0,230,118,0.1); text-shadow:var(--gg); animation:chipGlow 1.2s ease infinite; }
+@keyframes chipGlow { 0%,100%{box-shadow:0 0 0 0 rgba(0,230,118,0.4)} 50%{box-shadow:0 0 0 5px rgba(0,230,118,0)} }
+
+/* ============================================================
+   IRON RULES
+   ============================================================ */
+.rules-block {
+  background:rgba(198,255,0,0.025);
+  border:1px solid rgba(198,255,0,0.14); border-left:3px solid var(--lime);
+  border-radius:8px; padding:18px; margin-bottom:4px;
+}
+
+.rule-row { display:flex; gap:14px; padding:9px 0; border-bottom:1px solid rgba(198,255,0,0.07); }
+.rule-row:first-child{padding-top:0} .rule-row:last-child{border-bottom:none;padding-bottom:0}
+
+.rule-num { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:#d4ff40; text-shadow:var(--gl); min-width:22px; padding-top:2px; flex-shrink:0; }
+.rule-txt { font-family:'Inter',sans-serif; font-size:14px; font-weight:400; color:rgba(255,255,255,0.92); line-height:1.55; }
+
+/* ============================================================
+   PAYCHECK LOG
+   ============================================================ */
+.log-block {
+  background:var(--surface); border:1px solid rgba(208,0,255,0.18);
+  border-radius:8px; padding:18px; margin-bottom:4px;
+  backdrop-filter:blur(6px);
+}
+
+.log-form { display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+.form-row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+.lf-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; font-weight:500; letter-spacing:1.5px;
+  color:#e040ff; text-transform:uppercase;
+  display:block; margin-bottom:5px; text-shadow:var(--gp);
+}
+.lf-input {
+  width:100%;
+  background:rgba(0,0,0,0.5);
+  border:1px solid rgba(208,0,255,0.22);
+  border-radius:5px;
+  color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px; font-weight:400;
+  padding:10px 12px; outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.lf-input:focus { border-color:var(--purple); box-shadow:0 0 12px rgba(208,0,255,0.3); }
+
+.btn-launch {
+  width:100%; padding:14px;
+  background:linear-gradient(135deg,rgba(0,229,255,0.08),rgba(208,0,255,0.08));
+  border:1px solid var(--cyan); border-radius:6px;
+  color:var(--cyan);
+  font-family:'Orbitron',monospace; font-size:12px; font-weight:700;
+  letter-spacing:4px; cursor:pointer; position:relative; overflow:hidden;
+  text-shadow:var(--gc);
+  box-shadow:0 0 14px rgba(0,229,255,0.12),inset 0 0 14px rgba(0,229,255,0.04);
+  transition:all 0.3s;
+}
+.btn-launch::before {
+  content:''; position:absolute; top:0;left:-100%;
+  width:100%; height:100%;
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,0.2),transparent);
+  transition:left 0.5s;
+}
+.btn-launch:hover::before{left:100%}
+.btn-launch:hover { background:rgba(0,229,255,0.1); box-shadow:0 0 28px rgba(0,229,255,0.35),inset 0 0 28px rgba(0,229,255,0.08); }
+.btn-launch:active{transform:scale(0.98)}
+
+/* Log entries */
+.log-entry {
+  background:rgba(0,0,0,0.32); border:1px solid rgba(208,0,255,0.14);
+  border-radius:6px; padding:14px 16px; margin-bottom:10px;
+  position:relative;
+}
+.log-entry::before { content:''; position:absolute; left:0;top:0;bottom:0; width:3px; background:var(--purple); border-radius:3px 0 0 3px; }
+
+.le-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.le-date { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:400; color:#b8b8d0; }
+.le-gross { font-family:'Orbitron',monospace; font-size:16px; font-weight:700; color:var(--orange); text-shadow:var(--go); }
+
+.le-splits { display:flex; gap:7px; flex-wrap:wrap; }
+.stag { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:500; padding:4px 9px; border-radius:4px; letter-spacing:0.5px; }
+.stag.cash { background:rgba(0,230,118,0.1); color:var(--green); border:1px solid rgba(0,230,118,0.28); }
+.stag.dca  { background:rgba(0,229,255,0.1); color:var(--cyan);  border:1px solid rgba(0,229,255,0.28); }
+.stag.self { background:rgba(255,255,255,0.04); color:#c0c0d8; border:1px solid rgba(255,255,255,0.18); }
+
+.le-note { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:400; color:rgba(255,255,255,0.55); margin-top:8px; }
+
+.btn-del { position:absolute; top:12px; right:12px; background:transparent; border:none; color:rgba(255,23,68,0.28); font-size:17px; cursor:pointer; transition:color 0.2s; padding:0 4px; line-height:1; }
+.btn-del:hover { color:var(--red); text-shadow:var(--gk); }
+
+.empty-log { text-align:center; padding:30px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:400; letter-spacing:1.5px; color:#aaaacc; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+  text-align:center; padding:20px 0 32px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:400;
+  letter-spacing:2.5px; color:rgba(0,229,255,0.18); text-transform:uppercase;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--purple);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND -->
+<canvas id="star-canvas"></canvas>
+<div class="aurora">
+  <div class="orb orb1"></div><div class="orb orb2"></div>
+  <div class="orb orb3"></div><div class="orb orb4"></div>
+  <div class="orb orb5"></div><div class="orb orb6"></div>
+</div>
+<div class="grid-bg"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<div class="app">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="emblem">
+      <div class="emblem-ring"></div>
+      <div class="emblem-ring2"></div>
+      <div class="emblem-core">⚡</div>
+    </div>
+    <div class="hero-title">STACK.EXE</div>
+    <div class="hero-tagline">INCOME → CRYPTO STACK → FREEDOM</div>
+    <div class="ticker">
+      <div class="tick-item"><div class="tick-dot green"></div>SYSTEM ONLINE</div>
+      <div class="tick-sep">·</div>
+      <div class="tick-item"><div class="tick-dot cyan"></div>DCA ACTIVE</div>
+      <div class="tick-sep">·</div>
+      <div class="tick-item"><div class="tick-dot pink"></div>MONITORING BTC</div>
+    </div>
+  </div>
+
+  <!-- BTC BAR -->
+  <div class="btc-bar">
+    <div class="btc-left">
+      <div class="btc-main-label">BTC / USD — Update Manually</div>
+      <div class="btc-ath">Cycle ATH: $126,080 &nbsp;|&nbsp; Current ~$72K</div>
+    </div>
+    <input class="btc-input" type="number" id="btcInput" placeholder="72483" oninput="updateExits(this.value)">
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card sc1">
+      <div class="sc-label">Total Invested</div>
+      <div class="sc-val" id="totalInvested">$0</div>
+      <div class="sc-sub">Across all 4 coins</div>
+    </div>
+    <div class="stat-card sc2">
+      <div class="sc-label">Cash Buffer</div>
+      <div class="sc-val" id="totalCash">$1,000</div>
+      <div class="sc-sub">Target $3,500</div>
+    </div>
+    <div class="stat-card sc3">
+      <div class="sc-label">Total DCA'd</div>
+      <div class="sc-val" id="totalDca">$0</div>
+      <div class="sc-sub">Deployed to market</div>
+    </div>
+    <div class="stat-card sc4">
+      <div class="sc-label">Installs Logged</div>
+      <div class="sc-val" id="installCount">0</div>
+      <div class="sc-sub">Paychecks recorded</div>
+    </div>
+  </div>
+
+  <!-- BUFFER -->
+  <div class="buffer-block">
+    <div class="buf-header">
+      <div class="buf-label">// Buffer Status</div>
+      <div class="buf-pct" id="bufferPct">29%</div>
+    </div>
+    <div class="prog-track">
+      <div class="prog-fill" id="bufferBar" style="width:29%"></div>
+    </div>
+    <div class="prog-row">
+      <span id="bufferLeft">$1,000 banked</span>
+      <span>$3,500 unlocks full DCA</span>
+    </div>
+  </div>
+
+  <!-- POSITIONS -->
+  <div class="sec-head" style="color:var(--cyan)">Positions</div>
+  <div class="coins-wrap">
+
+    <div class="coin-card cc-eth">
+      <div class="cc-top"><div class="cc-name">ETH</div><div class="cc-badge">40% Allocation</div></div>
+      <div class="cc-inputs">
+        <div class="ci"><label>Cost Basis</label><input type="number" id="eth-basis" placeholder="0.00" oninput="calcPnl('eth')"></div>
+        <div class="ci"><label>Curr Price</label><input type="number" id="eth-price" placeholder="0.00" oninput="calcPnl('eth')"></div>
+        <div class="ci"><label>Invested $</label><input type="number" id="eth-invested" placeholder="0.00" oninput="updateTotals()"></div>
+      </div>
+      <div class="pnl-bar flat" id="eth-pnl">Enter prices to see P&amp;L</div>
+    </div>
+
+    <div class="coin-card cc-sol">
+      <div class="cc-top"><div class="cc-name">SOL</div><div class="cc-badge">30% Allocation</div></div>
+      <div class="cc-inputs">
+        <div class="ci"><label>Cost Basis</label><input type="number" id="sol-basis" placeholder="0.00" oninput="calcPnl('sol')"></div>
+        <div class="ci"><label>Curr Price</label><input type="number" id="sol-price" placeholder="0.00" oninput="calcPnl('sol')"></div>
+        <div class="ci"><label>Invested $</label><input type="number" id="sol-invested" placeholder="0.00" oninput="updateTotals()"></div>
+      </div>
+      <div class="pnl-bar flat" id="sol-pnl">Enter prices to see P&amp;L</div>
+    </div>
+
+    <div class="coin-card cc-link">
+      <div class="cc-top"><div class="cc-name">LINK</div><div class="cc-badge">15% Allocation</div></div>
+      <div class="cc-inputs">
+        <div class="ci"><label>Cost Basis</label><input type="number" id="link-basis" placeholder="0.00" oninput="calcPnl('link')"></div>
+        <div class="ci"><label>Curr Price</label><input type="number" id="link-price" placeholder="0.00" oninput="calcPnl('link')"></div>
+        <div class="ci"><label>Invested $</label><input type="number" id="link-invested" placeholder="0.00" oninput="updateTotals()"></div>
+      </div>
+      <div class="pnl-bar flat" id="link-pnl">Enter prices to see P&amp;L</div>
+    </div>
+
+    <div class="coin-card cc-avax">
+      <div class="cc-top"><div class="cc-name">AVAX</div><div class="cc-badge">15% Allocation</div></div>
+      <div class="cc-inputs">
+        <div class="ci"><label>Cost Basis</label><input type="number" id="avax-basis" placeholder="0.00" oninput="calcPnl('avax')"></div>
+        <div class="ci"><label>Curr Price</label><input type="number" id="avax-price" placeholder="0.00" oninput="calcPnl('avax')"></div>
+        <div class="ci"><label>Invested $</label><input type="number" id="avax-invested" placeholder="0.00" oninput="updateTotals()"></div>
+      </div>
+      <div class="pnl-bar flat" id="avax-pnl">Enter prices to see P&amp;L</div>
+    </div>
+
+  </div>
+
+  <!-- EXIT PROTOCOL -->
+  <div class="sec-head" style="color:var(--pink)">Exit Protocol</div>
+  <div class="exits-block">
+    <div class="exit-row">
+      <div class="exit-lvl">$85K</div>
+      <div class="exit-desc">Sell <b>25%</b> of every position. No hesitation. This was the plan.</div>
+      <div class="exit-chip wait" id="e1">Waiting</div>
+    </div>
+    <div class="exit-row">
+      <div class="exit-lvl">$100K</div>
+      <div class="exit-desc">Sell another <b>25%</b>. Reassess momentum before next tranche.</div>
+      <div class="exit-chip wait" id="e2">Waiting</div>
+    </div>
+    <div class="exit-row">
+      <div class="exit-lvl">$110K</div>
+      <div class="exit-desc">Sell another <b>25%</b>. Last 25% becomes your runner.</div>
+      <div class="exit-chip wait" id="e3">Waiting</div>
+    </div>
+    <div class="exit-row">
+      <div class="exit-lvl">$120K+</div>
+      <div class="exit-desc">Bleed out last <b>25%</b> slowly. Don't try to nail the exact top.</div>
+      <div class="exit-chip wait" id="e4">Waiting</div>
+    </div>
+  </div>
+
+  <!-- IRON RULES -->
+  <div class="sec-head" style="color:var(--lime)">Iron Rules</div>
+  <div class="rules-block">
+    <div class="rule-row"><div class="rule-num">01</div><div class="rule-txt">Emotion is not a trigger. Stick to the BTC exit levels above. Period.</div></div>
+    <div class="rule-row"><div class="rule-num">02</div><div class="rule-txt">50% of every paycheck goes to DCA. Non-negotiable, no exceptions.</div></div>
+    <div class="rule-row"><div class="rule-num">03</div><div class="rule-txt">Don't increase position sizes because it's pumping. The plan was made when you were rational.</div></div>
+    <div class="rule-row"><div class="rule-num">04</div><div class="rule-txt">Re-entering after a sell means DCA back in. Never lump sum the bottom.</div></div>
+    <div class="rule-row"><div class="rule-num">05</div><div class="rule-txt">If BTC drops 40%+ from your entry — keep buying. That's the strategy working.</div></div>
+    <div class="rule-row"><div class="rule-num">06</div><div class="rule-txt">Every buy is a taxable cost basis event. Track it carefully. The IRS doesn't forget.</div></div>
+  </div>
+
+  <!-- PAYCHECK LOG -->
+  <div class="sec-head" style="color:var(--purple)">Paycheck Log</div>
+  <div class="log-block">
+    <div class="log-form">
+      <div class="form-row2">
+        <div><label class="lf-label">Date</label><input class="lf-input" type="date" id="logDate"></div>
+        <div><label class="lf-label">Gross Pay ($)</label><input class="lf-input" type="number" id="logGross" placeholder="e.g. 3500"></div>
+      </div>
+      <div>
+        <label class="lf-label">Notes</label>
+        <input class="lf-input" type="text" id="logNotes" placeholder="e.g. 2 installs Saturday">
+      </div>
+      <button class="btn-launch" onclick="addEntry()">// LOG PAYCHECK</button>
+    </div>
+    <div id="logEntries"><div class="empty-log">No entries yet — log your first paycheck</div></div>
+  </div>
+
+  <div class="footer">STACK.EXE v3.0 &nbsp;·&nbsp; Not Financial Advice &nbsp;·&nbsp; Execute the Plan</div>
+
+</div><!-- /app -->
+
+<script>
+/* ============================================================
+   PARTICLE FIELD
+   ============================================================ */
+const canvas = document.getElementById('star-canvas');
+const ctx    = canvas.getContext('2d');
+let W = canvas.width  = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+
+const COLS = ['#00e5ff','#d000ff','#ff0080','#c6ff00','#ff6d00','#00e676','#ffffff'];
+const PARTS = 140;
+let pts = [];
+
+function mkPt() {
+  return {
+    x: Math.random() * W,
+    y: Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.35,
+    vy: (Math.random() - 0.5) * 0.35,
+    r:  Math.random() * 1.6 + 0.3,
+    col: COLS[Math.floor(Math.random() * COLS.length)],
+    life: Math.random() * 250 + 80,
+    age:  0,
+    tw:   Math.random() * Math.PI * 2,
+  };
+}
+for (let i = 0; i < PARTS; i++) { const p = mkPt(); p.age = Math.random() * p.life; pts.push(p); }
+
+function drawPts() {
+  ctx.clearRect(0, 0, W, H);
+  for (const p of pts) {
+    p.age++; p.tw += 0.045;
+    if (p.age > p.life) { Object.assign(p, mkPt()); p.age = 0; }
+    const lr = p.age / p.life;
+    const fade = lr < 0.2 ? lr / 0.2 : lr > 0.8 ? (1-lr)/0.2 : 1;
+    ctx.globalAlpha = Math.max(0, (Math.sin(p.tw) * 0.3 + 0.7) * fade * 0.65);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.col;
+    ctx.shadowBlur = 10; ctx.shadowColor = p.col;
+    ctx.fill();
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < -10) p.x = W+10;
+    if (p.x > W+10) p.x = -10;
+    if (p.y < -10) p.y = H+10;
+    if (p.y > H+10) p.y = -10;
+  }
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+  requestAnimationFrame(drawPts);
+}
+drawPts();
+window.addEventListener('resize', () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; });
+
+/* ============================================================
+   APP LOGIC — with full localStorage persistence
+   ============================================================ */
+
+const STORE_KEY = 'stackexe_v1';
+const fmt = n => '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+
+/* ---- Load saved state or use defaults ---- */
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    entries: [],
+    cashBal: 1000,
+    dcaTotal: 0,
+    btcPrice: '',
+    coins: { eth:{basis:'',price:'',invested:''}, sol:{basis:'',price:'',invested:''}, link:{basis:'',price:'',invested:''}, avax:{basis:'',price:'',invested:''} }
+  };
+}
+
+/* ---- Save entire state to localStorage ---- */
+function saveState() {
+  const coins = {};
+  ['eth','sol','link','avax'].forEach(c => {
+    coins[c] = {
+      basis:    document.getElementById(c+'-basis').value,
+      price:    document.getElementById(c+'-price').value,
+      invested: document.getElementById(c+'-invested').value,
+    };
+  });
+  const state = { entries, cashBal, dcaTotal, btcPrice: document.getElementById('btcInput').value, coins };
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+/* ---- Restore UI from saved state ---- */
+function restoreUI(state) {
+  // Coins
+  ['eth','sol','link','avax'].forEach(c => {
+    if (state.coins && state.coins[c]) {
+      document.getElementById(c+'-basis').value    = state.coins[c].basis    || '';
+      document.getElementById(c+'-price').value    = state.coins[c].price    || '';
+      document.getElementById(c+'-invested').value = state.coins[c].invested || '';
+      calcPnl(c);
+    }
+  });
+  // BTC price
+  if (state.btcPrice) {
+    document.getElementById('btcInput').value = state.btcPrice;
+    updateExits(state.btcPrice);
+  }
+  // Totals
+  updateTotals();
+  updateBuffer();
+  renderEntries();
+}
+
+/* ---- Init ---- */
+const saved = loadState();
+let entries  = saved.entries  || [];
+let cashBal  = saved.cashBal  ?? 1000;
+let dcaTotal = saved.dcaTotal || 0;
+
+/* ---- Core functions ---- */
+function calcPnl(coin) {
+  const b = parseFloat(document.getElementById(coin+'-basis').value);
+  const p = parseFloat(document.getElementById(coin+'-price').value);
+  const el = document.getElementById(coin+'-pnl');
+  if (!b || !p) { el.className='pnl-bar flat'; el.textContent='Enter prices to see P&L'; return; }
+  const pct = ((p-b)/b*100).toFixed(1);
+  if (p > b)      { el.className='pnl-bar up';   el.textContent='▲ +'+pct+'% above cost basis'; }
+  else if (p < b) { el.className='pnl-bar down';  el.textContent='▼ '+pct+'% below cost basis'; }
+  else            { el.className='pnl-bar flat';  el.textContent='At cost basis'; }
+  saveState();
+}
+
+function updateTotals() {
+  let t=0;
+  ['eth','sol','link','avax'].forEach(c=>{t+=parseFloat(document.getElementById(c+'-invested').value)||0;});
+  document.getElementById('totalInvested').textContent=fmt(t);
+  saveState();
+}
+
+function updateExits(val) {
+  const btc=parseFloat(val);
+  [85000,100000,110000,120000].forEach((t,i)=>{
+    const el=document.getElementById('e'+(i+1));
+    if(btc>=t){el.className='exit-chip hit';el.textContent='Triggered';}
+    else{el.className='exit-chip wait';el.textContent='Waiting';}
+  });
+  saveState();
+}
+
+function updateBuffer() {
+  const tgt=3500, pct=Math.min(100,Math.round(cashBal/tgt*100));
+  document.getElementById('bufferPct').textContent=pct+'%';
+  document.getElementById('bufferBar').style.width=pct+'%';
+  document.getElementById('bufferLeft').textContent=fmt(cashBal)+' banked';
+  document.getElementById('totalCash').textContent=fmt(cashBal);
+  document.getElementById('totalDca').textContent=fmt(dcaTotal);
+  document.getElementById('installCount').textContent=entries.length;
+}
+
+function addEntry() {
+  const date=document.getElementById('logDate').value;
+  const gross=parseFloat(document.getElementById('logGross').value);
+  const notes=document.getElementById('logNotes').value;
+  if(!date||!gross){alert('Need a date and amount.');return;}
+  const cash=gross*0.40, dca=gross*0.50, personal=gross*0.10;
+  cashBal+=cash; dcaTotal+=dca;
+  entries.unshift({date,gross,cash,dca,personal,notes});
+  updateBuffer(); renderEntries(); saveState();
+  document.getElementById('logGross').value='';
+  document.getElementById('logNotes').value='';
+}
+
+function removeEntry(i) {
+  cashBal=Math.max(0,cashBal-entries[i].cash);
+  dcaTotal=Math.max(0,dcaTotal-entries[i].dca);
+  entries.splice(i,1);
+  updateBuffer(); renderEntries(); saveState();
+}
+
+function renderEntries() {
+  const el=document.getElementById('logEntries');
+  if(!entries.length){el.innerHTML='<div class="empty-log">No entries yet — log your first paycheck</div>';return;}
+  el.innerHTML=entries.map((e,i)=>`
+    <div class="log-entry">
+      <button class="btn-del" onclick="removeEntry(${i})">×</button>
+      <div class="le-top">
+        <div class="le-date">${e.date}</div>
+        <div class="le-gross">${fmt(e.gross)}</div>
+      </div>
+      <div class="le-splits">
+        <span class="stag cash">Buffer +${fmt(e.cash)}</span>
+        <span class="stag dca">DCA ${fmt(e.dca)}</span>
+        <span class="stag self">Personal ${fmt(e.personal)}</span>
+      </div>
+      ${e.notes?`<div class="le-note">// ${e.notes}</div>`:''}
+    </div>
+  `).join('');
+}
+
+/* ---- Boot ---- */
+document.getElementById('logDate').valueAsDate = new Date();
+restoreUI(saved);
+</script>
+</body>
+</html>
