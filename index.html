@@ -222,48 +222,94 @@ body {
 .tick-sep { color: #6060aa; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 
 /* ============================================================
-   BTC TELEMETRY BAR
+   LIVE PRICE TICKER
    ============================================================ */
-.btc-bar {
+@keyframes sweep { 0%{left:-40%} 100%{left:140%} }
+
+.price-ticker-block {
   background: rgba(0,229,255,0.04);
   border: 1px solid rgba(0,229,255,0.22);
   border-radius: 8px;
-  padding: 14px 18px;
+  padding: 16px 18px;
   margin-bottom: 16px;
   position: relative; overflow: hidden;
-  display: flex; align-items: center; justify-content: space-between;
 }
-.btc-bar::before {
+.price-ticker-block::before {
   content:''; position:absolute; top:0; left:-60%;
   width:40%; height:1px;
   background:linear-gradient(90deg,transparent,var(--cyan),transparent);
   animation: sweep 2.5s linear infinite;
 }
-@keyframes sweep { 0%{left:-40%} 100%{left:140%} }
+.ticker-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.ticker-label { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; color:#40eeff; letter-spacing:2px; text-shadow:var(--gc); }
+.ticker-status { font-family:'JetBrains Mono',monospace; font-size:10px; color:#c0c0d8; letter-spacing:1px; }
 
-.btc-left { display:flex; flex-direction:column; gap:3px; }
-.btc-main-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px; font-weight: 500;
-  color: #c0c0d8; letter-spacing: 1.5px; text-transform: uppercase;
-}
-.btc-ath {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: #9898b8; letter-spacing: 1px;
-}
+.price-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
 
-.btc-input {
-  background: transparent;
-  border: none;
-  border-bottom: 1.5px solid var(--orange);
-  color: var(--orange);
-  font-family: 'Orbitron', monospace;
-  font-size: 20px; font-weight: 700;
-  width: 148px; text-align: right;
-  outline: none; padding: 2px 6px;
-  text-shadow: var(--go);
+.price-tile {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius:6px; padding:10px 10px 8px;
+  text-align:center;
+  transition: border-color 0.2s;
 }
-.btc-input::placeholder { color:rgba(255,109,0,0.25); font-size:13px; }
+.price-tile:hover { border-color:rgba(255,255,255,0.18); }
+.refresh-tile { cursor:pointer; border-color:rgba(0,229,255,0.2); }
+.refresh-tile:hover { border-color:var(--cyan); background:rgba(0,229,255,0.06); }
+.refresh-tile:active { transform:scale(0.95); }
+
+.pt-coin { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; color:#ff8c40; margin-bottom:5px; letter-spacing:1px; }
+.pt-price { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:#f4f4ff; line-height:1; margin-bottom:4px; }
+.pt-change { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:500; }
+.pt-change.up   { color:#40ff99; }
+.pt-change.down { color:#ff4d6d; }
+.pt-change.flat { color:#9898b8; }
+
+.btc-exit-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.btc-main-label { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; color:#c0c0d8; letter-spacing:1.5px; text-transform:uppercase; }
+.btc-ath { font-family:'JetBrains Mono',monospace; font-size:10px; color:#9898b8; letter-spacing:1px; }
+
+.exit-trigger-pills { display:flex; gap:8px; flex-wrap:wrap; }
+.exit-trigger-pills .exit-chip { flex:1; min-width:60px; text-align:center; }
+
+/* ============================================================
+   MANUAL ADJUSTMENT PANEL
+   ============================================================ */
+.adjust-block {
+  background: var(--surface);
+  border: 1px solid rgba(212,255,64,0.2);
+  border-radius: 8px; padding: 18px; margin-bottom: 16px;
+  backdrop-filter: blur(6px);
+}
+.adjust-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.adj-group { display:flex; flex-direction:column; gap:6px; }
+.adj-label { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:500; letter-spacing:1.5px; color:#d4ff40; text-transform:uppercase; text-shadow:var(--gl); }
+.adj-input-row { display:flex; gap:6px; }
+.adj-input {
+  flex:1;
+  background:rgba(0,0,0,0.5);
+  border:1px solid rgba(212,255,64,0.2);
+  border-radius:5px;
+  color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px; font-weight:400;
+  padding:9px 10px; outline:none;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+.adj-input:focus { border-color:#d4ff40; box-shadow:0 0 10px rgba(212,255,64,0.25); }
+.adj-btn {
+  background: rgba(212,255,64,0.1);
+  border:1px solid rgba(212,255,64,0.4);
+  border-radius:5px;
+  color:#d4ff40;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px; font-weight:700;
+  padding:9px 14px; cursor:pointer;
+  transition:all 0.2s;
+}
+.adj-btn:hover { background:rgba(212,255,64,0.2); box-shadow:0 0 10px rgba(212,255,64,0.3); }
+.adj-btn:active { transform:scale(0.97); }
+.adj-current { font-family:'JetBrains Mono',monospace; font-size:10px; color:#b0b0cc; }
 
 /* ============================================================
    STAT CARDS
@@ -598,13 +644,77 @@ body {
     </div>
   </div>
 
-  <!-- BTC BAR -->
-  <div class="btc-bar">
-    <div class="btc-left">
-      <div class="btc-main-label">BTC / USD — Update Manually</div>
-      <div class="btc-ath">Cycle ATH: $126,080 &nbsp;|&nbsp; Current ~$72K</div>
+  <!-- LIVE PRICE TICKER -->
+  <div class="price-ticker-block">
+    <div class="ticker-header">
+      <div class="ticker-label">// LIVE PRICES</div>
+      <div class="ticker-status" id="priceStatus">Fetching...</div>
     </div>
-    <input class="btc-input" type="number" id="btcInput" placeholder="72483" oninput="updateExits(this.value)">
+    <div class="price-grid">
+      <div class="price-tile">
+        <div class="pt-coin">BTC</div>
+        <div class="pt-price" id="live-btc">—</div>
+        <div class="pt-change flat" id="chg-btc">—</div>
+      </div>
+      <div class="price-tile">
+        <div class="pt-coin" style="color:#8ca8ff">ETH</div>
+        <div class="pt-price" id="live-eth">—</div>
+        <div class="pt-change flat" id="chg-eth">—</div>
+      </div>
+      <div class="price-tile">
+        <div class="pt-coin" style="color:#bb77ff">SOL</div>
+        <div class="pt-price" id="live-sol">—</div>
+        <div class="pt-change flat" id="chg-sol">—</div>
+      </div>
+      <div class="price-tile">
+        <div class="pt-coin" style="color:#55aaff">LINK</div>
+        <div class="pt-price" id="live-link">—</div>
+        <div class="pt-change flat" id="chg-link">—</div>
+      </div>
+      <div class="price-tile">
+        <div class="pt-coin" style="color:#ff6666">AVAX</div>
+        <div class="pt-price" id="live-avax">—</div>
+        <div class="pt-change flat" id="chg-avax">—</div>
+      </div>
+      <div class="price-tile refresh-tile" onclick="fetchPrices()">
+        <div class="pt-coin" style="color:#40eeff;font-size:18px">↻</div>
+        <div class="pt-price" style="font-size:11px;color:#c8c8e0">Refresh</div>
+        <div class="pt-change flat" id="lastUpdated">tap to update</div>
+      </div>
+    </div>
+    <div class="btc-exit-row">
+      <div class="btc-main-label">BTC Exit Triggers</div>
+      <div class="btc-ath">Cycle ATH: $126,080</div>
+    </div>
+    <div class="exit-trigger-pills">
+      <div class="exit-chip wait" id="e1">$85K</div>
+      <div class="exit-chip wait" id="e2">$100K</div>
+      <div class="exit-chip wait" id="e3">$110K</div>
+      <div class="exit-chip wait" id="e4">$120K+</div>
+    </div>
+  </div>
+
+  <!-- MANUAL ADJUSTMENTS -->
+  <div class="sec-head" style="color:#d4ff40">Adjust Balances</div>
+  <div class="adjust-block">
+    <div class="adjust-grid">
+      <div class="adj-group">
+        <div class="adj-label">Cash Buffer</div>
+        <div class="adj-input-row">
+          <input class="adj-input" type="number" id="adjCash" placeholder="e.g. 1500">
+          <button class="adj-btn" onclick="adjustCash()">SET</button>
+        </div>
+        <div class="adj-current">Current: <span id="adjCashCurrent">$1,000</span></div>
+      </div>
+      <div class="adj-group">
+        <div class="adj-label">Total DCA'd</div>
+        <div class="adj-input-row">
+          <input class="adj-input" type="number" id="adjDca" placeholder="e.g. 500">
+          <button class="adj-btn" onclick="adjustDca()">SET</button>
+        </div>
+        <div class="adj-current">Current: <span id="adjDcaCurrent">$0</span></div>
+      </div>
+    </div>
   </div>
 
   <!-- STATS -->
@@ -698,22 +808,22 @@ body {
     <div class="exit-row">
       <div class="exit-lvl">$85K</div>
       <div class="exit-desc">Sell <b>25%</b> of every position. No hesitation. This was the plan.</div>
-      <div class="exit-chip wait" id="e1">Waiting</div>
+      <div class="exit-chip wait" id="ex1">Waiting</div>
     </div>
     <div class="exit-row">
       <div class="exit-lvl">$100K</div>
       <div class="exit-desc">Sell another <b>25%</b>. Reassess momentum before next tranche.</div>
-      <div class="exit-chip wait" id="e2">Waiting</div>
+      <div class="exit-chip wait" id="ex2">Waiting</div>
     </div>
     <div class="exit-row">
       <div class="exit-lvl">$110K</div>
       <div class="exit-desc">Sell another <b>25%</b>. Last 25% becomes your runner.</div>
-      <div class="exit-chip wait" id="e3">Waiting</div>
+      <div class="exit-chip wait" id="ex3">Waiting</div>
     </div>
     <div class="exit-row">
       <div class="exit-lvl">$120K+</div>
       <div class="exit-desc">Bleed out last <b>25%</b> slowly. Don't try to nail the exact top.</div>
-      <div class="exit-chip wait" id="e4">Waiting</div>
+      <div class="exit-chip wait" id="ex4">Waiting</div>
     </div>
   </div>
 
@@ -803,44 +913,26 @@ drawPts();
 window.addEventListener('resize', () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; });
 
 /* ============================================================
-   APP LOGIC — with full localStorage persistence
+   APP LOGIC — localStorage persistence + live prices + manual adjustments
    ============================================================ */
 
 const STORE_KEY = 'stackexe_v1';
 const fmt = n => '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+const fmtPrice = n => n >= 1000 ? '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}) : '$' + Number(n).toFixed(2);
 
-/* ---- Load saved state or use defaults ---- */
+/* ---- Load / Save state ---- */
 function loadState() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch(e) {}
-  return {
-    entries: [],
-    cashBal: 1000,
-    dcaTotal: 0,
-    btcPrice: '',
-    coins: { eth:{basis:'',price:'',invested:''}, sol:{basis:'',price:'',invested:''}, link:{basis:'',price:'',invested:''}, avax:{basis:'',price:'',invested:''} }
-  };
+  try { const r = localStorage.getItem(STORE_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return { entries:[], cashBal:1000, dcaTotal:0, coins:{eth:{basis:'',price:'',invested:''},sol:{basis:'',price:'',invested:''},link:{basis:'',price:'',invested:''},avax:{basis:'',price:'',invested:''}} };
 }
-
-/* ---- Save entire state to localStorage ---- */
 function saveState() {
   const coins = {};
-  ['eth','sol','link','avax'].forEach(c => {
-    coins[c] = {
-      basis:    document.getElementById(c+'-basis').value,
-      price:    document.getElementById(c+'-price').value,
-      invested: document.getElementById(c+'-invested').value,
-    };
-  });
-  const state = { entries, cashBal, dcaTotal, btcPrice: document.getElementById('btcInput').value, coins };
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
+  ['eth','sol','link','avax'].forEach(c => { coins[c] = { basis:document.getElementById(c+'-basis').value, price:document.getElementById(c+'-price').value, invested:document.getElementById(c+'-invested').value }; });
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({entries, cashBal, dcaTotal, coins})); } catch(e) {}
 }
 
-/* ---- Restore UI from saved state ---- */
+/* ---- Restore UI ---- */
 function restoreUI(state) {
-  // Coins
   ['eth','sol','link','avax'].forEach(c => {
     if (state.coins && state.coins[c]) {
       document.getElementById(c+'-basis').value    = state.coins[c].basis    || '';
@@ -849,15 +941,9 @@ function restoreUI(state) {
       calcPnl(c);
     }
   });
-  // BTC price
-  if (state.btcPrice) {
-    document.getElementById('btcInput').value = state.btcPrice;
-    updateExits(state.btcPrice);
-  }
-  // Totals
-  updateTotals();
-  updateBuffer();
-  renderEntries();
+  updateTotals(); updateBuffer(); renderEntries();
+  document.getElementById('adjCashCurrent').textContent = fmt(cashBal);
+  document.getElementById('adjDcaCurrent').textContent  = fmt(dcaTotal);
 }
 
 /* ---- Init ---- */
@@ -865,6 +951,86 @@ const saved = loadState();
 let entries  = saved.entries  || [];
 let cashBal  = saved.cashBal  ?? 1000;
 let dcaTotal = saved.dcaTotal || 0;
+
+/* ---- Live Price Fetching (CoinGecko free API) ---- */
+let livePrices = {};
+
+async function fetchPrices() {
+  document.getElementById('priceStatus').textContent = 'Fetching...';
+  try {
+    const url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,chainlink,avalanche-2&vs_currencies=usd&include_24hr_change=true';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+
+    livePrices = {
+      btc:  { price: data.bitcoin?.usd,         change: data.bitcoin?.usd_24h_change },
+      eth:  { price: data.ethereum?.usd,        change: data.ethereum?.usd_24h_change },
+      sol:  { price: data.solana?.usd,           change: data.solana?.usd_24h_change },
+      link: { price: data.chainlink?.usd,        change: data.chainlink?.usd_24h_change },
+      avax: { price: data['avalanche-2']?.usd,   change: data['avalanche-2']?.usd_24h_change },
+    };
+
+    // Update tiles
+    Object.entries(livePrices).forEach(([coin, d]) => {
+      const priceEl  = document.getElementById('live-' + coin);
+      const changeEl = document.getElementById('chg-'  + coin);
+      if (priceEl && d.price) {
+        priceEl.textContent = fmtPrice(d.price);
+        const chg = d.change ? d.change.toFixed(2) : null;
+        if (chg !== null) {
+          const up = parseFloat(chg) >= 0;
+          changeEl.textContent  = (up ? '▲ +' : '▼ ') + chg + '%';
+          changeEl.className    = 'pt-change ' + (up ? 'up' : 'down');
+        }
+      }
+    });
+
+    // Auto-fill current price into coin cards
+    ['eth','sol','link','avax'].forEach(c => {
+      const inp = document.getElementById(c + '-price');
+      if (livePrices[c]?.price && !inp.value) {
+        inp.value = livePrices[c].price.toFixed(2);
+        calcPnl(c);
+      }
+    });
+
+    // Update BTC exit triggers using live BTC price
+    if (livePrices.btc?.price) updateExits(livePrices.btc.price);
+
+    const now = new Date();
+    document.getElementById('priceStatus').textContent = 'Updated ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('lastUpdated').textContent = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('lastUpdated').className = 'pt-change flat';
+
+  } catch(err) {
+    document.getElementById('priceStatus').textContent = 'Fetch failed — tap ↻';
+    console.warn('Price fetch error:', err);
+  }
+}
+
+// Auto-fetch on load, then every 60 seconds
+fetchPrices();
+setInterval(fetchPrices, 60000);
+
+/* ---- Manual Adjustments ---- */
+function adjustCash() {
+  const val = parseFloat(document.getElementById('adjCash').value);
+  if (isNaN(val) || val < 0) { alert('Enter a valid amount.'); return; }
+  cashBal = val;
+  document.getElementById('adjCash').value = '';
+  document.getElementById('adjCashCurrent').textContent = fmt(cashBal);
+  updateBuffer(); saveState();
+}
+
+function adjustDca() {
+  const val = parseFloat(document.getElementById('adjDca').value);
+  if (isNaN(val) || val < 0) { alert('Enter a valid amount.'); return; }
+  dcaTotal = val;
+  document.getElementById('adjDca').value = '';
+  document.getElementById('adjDcaCurrent').textContent = fmt(dcaTotal);
+  updateBuffer(); saveState();
+}
 
 /* ---- Core functions ---- */
 function calcPnl(coin) {
@@ -886,14 +1052,21 @@ function updateTotals() {
   saveState();
 }
 
-function updateExits(val) {
-  const btc=parseFloat(val);
+function updateExits(btcPrice) {
+  const btc = parseFloat(btcPrice);
+  // Ticker pills (e1-e4)
   [85000,100000,110000,120000].forEach((t,i)=>{
-    const el=document.getElementById('e'+(i+1));
-    if(btc>=t){el.className='exit-chip hit';el.textContent='Triggered';}
-    else{el.className='exit-chip wait';el.textContent='Waiting';}
+    const el = document.getElementById('e'+(i+1));
+    if (el) {
+      el.className = btc >= t ? 'exit-chip hit' : 'exit-chip wait';
+      el.textContent = ['$85K','$100K','$110K','$120K+'][i];
+    }
   });
-  saveState();
+  // Exit protocol rows (ex1-ex4)
+  [85000,100000,110000,120000].forEach((t,i)=>{
+    const el = document.getElementById('ex'+(i+1));
+    if (el) { el.className = btc >= t ? 'exit-chip hit' : 'exit-chip wait'; }
+  });
 }
 
 function updateBuffer() {
@@ -904,6 +1077,8 @@ function updateBuffer() {
   document.getElementById('totalCash').textContent=fmt(cashBal);
   document.getElementById('totalDca').textContent=fmt(dcaTotal);
   document.getElementById('installCount').textContent=entries.length;
+  document.getElementById('adjCashCurrent').textContent=fmt(cashBal);
+  document.getElementById('adjDcaCurrent').textContent=fmt(dcaTotal);
 }
 
 function addEntry() {
@@ -948,7 +1123,6 @@ function renderEntries() {
 
 /* ---- Boot ---- */
 document.getElementById('logDate').valueAsDate = new Date();
-restoreUI(saved);
-</script>
+restoreUI(saved);</script>
 </body>
 </html>
